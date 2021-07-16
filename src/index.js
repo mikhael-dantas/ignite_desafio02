@@ -10,19 +10,64 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const {username} = request.headers
+  const foundUser = users.find(user => user.username === username)
+  if (!foundUser) { return response.status(404).json({error: "mensagem de erro padrão"}) }
+
+  request.user = foundUser
+  next()
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const {user: userToCheck} = request
+  if(userToCheck.pro || userToCheck.todos.length < 10) {
+    return next()
+  }
+  return response.status(403).json({error: "mensagem de erro padrão"})
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const {username} = request.headers
+  const {id} = request.params
+
+  const isAValidId = validate(id)
+  if (!isAValidId) { return response.status(400).json({error: "mensagem de erro padrão"}) }
+  
+  if (!username) { return response.status(400).json({error: "mensagem de erro padrão"}) }
+  
+  const foundUser = users.find(user => user.username === username)
+  if (!foundUser) { 
+    return response.status(404).json({error: "mensagem de erro padrão"}) 
+  }
+  
+
+  const foundTodo = foundUser.todos.find(todo => todo.id === id)
+
+  if(!isAValidId) {
+    return response.status(400).json({error: "mensagem de erro padrão"})
+  }
+  if(!foundTodo) {
+    return response.status(404).json({error: "mensagem de erro padrão"})
+  }
+  request.user = foundUser
+  request.todo = foundTodo
+  next()
+
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const {id} = request.params
+
+  const isAValidId = uuidv4(id)
+
+  if (!isAValidId) { return response.status(400).json({error: "mensagem de erro padrão"}) }
+
+  const foundUser = users.find(user => user.id === id)
+  
+  if (!foundUser) { return response.status(404).json({error: "mensagem de erro padrão"}) }
+
+  request.user = foundUser
+  next()
 }
 
 app.post('/users', (request, response) => {
